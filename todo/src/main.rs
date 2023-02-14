@@ -1,9 +1,31 @@
-use actix_web::{get, web, App, HttpResponse, HttpServer, ResponseError};
+use actix_web::{get, web, App, HttpResponse, HttpServer, ResponseError, http::header, post};
 use thiserror::Error;
 use askama::Template;
 use r2d2::Pool;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::params;
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct AddParams {
+    text: String,
+}
+
+#[derive(Deserialize)]
+struct DeleteParams {
+    id: u32,
+}
+
+struct TodoEntry {
+    id: u32,
+    text: String,
+}
+
+#[derive(Template)]
+#[template(path = "index.html")]
+struct IndexTemplate {
+    entries: Vec<TodoEntry>,
+}
 
 #[derive(Error, Debug)]
 enum MyError {
@@ -18,18 +40,6 @@ enum MyError {
 }
 
 impl ResponseError for MyError {}
-
-struct TodoEntry {
-    id: u32,
-    text: String,
-}
-
-#[derive(Template)]
-#[template(path = "index.html")]
-struct IndexTemplate {
-    entries: Vec<TodoEntry>,
-}
-
 
 
 #[get("/")]
@@ -57,6 +67,30 @@ async fn index(db: web::Data<Pool<SqliteConnectionManager>>) -> Result<HttpRespo
         .body(response_body))
 }
 
+#[post("/add")]
+async fn add_todo (
+    params: web::Form<AddParams>,
+    db: web::Data<r2d2::Pool<SqliteConnectionManager>>,
+) -> Result <HttpResponse, MyError> {
+    let conn = db.get()?;
+    conn.execute("INSERT INTO todo (text) VALUES (?)", &[&params.text])?;
+    Ok(HttpResponse::SeeOther()
+        .header(header::LOCATION, "/")
+        .finish())
+}
+
+#[post("/delete")]
+async fn delete_todo (
+    params: web::Form<DeleteParams>,
+    db: web::Data<r2d2::Pool<SqliteConnectionManager>>,
+) -> Result<HttpResponse, MyError> {
+    let conn = db.get()?;
+    conn.execute("DELETE FROM todo WHERE id=?", &[&params.id])?;
+    Ok(HttpResponse::SeeOther()
+        .header(header::LOCATION, "/")
+        .finish())
+}
+
 #[actix_web::main]
 async fn main() -> Result<(), actix_web::Error> {
     let manager = SqliteConnectionManager::file("todo.db");
@@ -74,7 +108,12 @@ async fn main() -> Result<(), actix_web::Error> {
     .expect("Failed to create a table `todo`.");
 
 
-    HttpServer::new(move || App::new().service(index).data(pool.clone()))
+    HttpServer::new(move || 
+        App::new()
+            .service(index)
+            .service(add_todo)
+            .service(delete_todo)
+            .data(pool.clone()))
         .bind("0.0.0.0:8080")?
         .run()
         .await?;
