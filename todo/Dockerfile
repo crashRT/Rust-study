@@ -20,7 +20,7 @@ RUN cargo build --release
 
 # -----
 # リリース用
-FROM debian:10.4
+FROM debian:latest
 COPY --from=builder /todo/target/release/todo /usr/local/bin/todo
 CMD ["todo"]
 
