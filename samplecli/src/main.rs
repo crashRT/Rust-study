@@ -1,4 +1,5 @@
 use anyhow::{bail, ensure, Context, Result};
+use std::path::PathBuf;
 
 use clap::Parser;
 use std::fs::File;
@@ -18,7 +19,7 @@ struct Opts {
 
     /// formulas written in RPN
     #[clap(name = "FILE")]
-    formula_file: Option<String>,
+    formula_file: Option<PathBuf>,
 }
 
 struct RpnCalculator(bool);
