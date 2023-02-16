@@ -1,12 +1,17 @@
 use iced::{
-    button, executor, Align, Application, Button, Clipboard, Columns, Command, Element, Font,
+    button, executor, Align, Application, Button, Clipboard, Column, Command, Element, Font,
     HorizontalAlignment, Length, Row, Settings, Text,
 };
 
-struct GUI{
+const FONT: Font = Font::External {
+    name: "Ricty Diminished",
+    bytes: include_bytes!("../rsc/RictyDiminished-Regular.ttf"),
+};
+
+struct GUI {
     start_stop_button_state: button::State,
     reset_button_state: button::State,
-};
+}
 
 impl Application for GUI {
     type Executor = executor::Default;
@@ -14,11 +19,13 @@ impl Application for GUI {
     type Flags = ();
 
     fn new(_flags: ()) -> (GUI, Command<Self::Message>) {
-        (GUI{
-            start_stop_button_state: button::State::new(),
-            reset_button_state: button::State::new(),
-        },
-        Command::none())
+        (
+            GUI {
+                start_stop_button_state: button::State::new(),
+                reset_button_state: button::State::new(),
+            },
+            Command::none(),
+        )
     }
 
     fn title(&self) -> String {
@@ -53,22 +60,24 @@ impl Application for GUI {
 
         // prepare column
         Column::new()
-        .push(tick_text)
-        .push(
-            Row::new()
-                .push(start_stop_button)
-                .push(reset_button)
-                .spacing(10),
-        )
-        .spacing(10)
-        .padding(10)
-        .width(Length::Fill)
-        .height(Length::Fill)
-        .align_items(Align::Center)
-        .into()
+            .push(tick_text)
+            .push(
+                Row::new()
+                    .push(start_stop_button)
+                    .push(reset_button)
+                    .spacing(10),
+            )
+            .spacing(10)
+            .padding(10)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .align_items(Align::Center)
+            .into()
     }
 }
 
 fn main() {
-    GUI::run(Settings::default());
+    let mut settings = Settings::default();
+    settings.window.size = (400u32, 120u32);
+    GUI::run(settings);
 }
