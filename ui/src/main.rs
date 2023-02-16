@@ -8,19 +8,38 @@ const FONT: Font = Font::External {
     bytes: include_bytes!("../rsc/RictyDiminished-Regular.ttf"),
 };
 
+fn main() {
+    let mut settings = Settings::default();
+    settings.window.size = (400u32, 120u32);
+    GUI::run(settings);
+}
 struct GUI {
+    tick_state: TickState,
     start_stop_button_state: button::State,
     reset_button_state: button::State,
 }
 
+#[derive(Debug, Clone)]
+pub enum Message {
+    Start,
+    Stop.
+    Reset,
+}
+
+pub enum TickState {
+    Stopped,
+    Ticking,
+}
+
 impl Application for GUI {
     type Executor = executor::Default;
-    type Message = ();
+    type Message = Message;
     type Flags = ();
 
     fn new(_flags: ()) -> (GUI, Command<Self::Message>) {
         (
             GUI {
+                tick_state: TickState::Stopped,
                 start_stop_button_state: button::State::new(),
                 reset_button_state: button::State::new(),
             },
@@ -74,10 +93,4 @@ impl Application for GUI {
             .align_items(Align::Center)
             .into()
     }
-}
-
-fn main() {
-    let mut settings = Settings::default();
-    settings.window.size = (400u32, 120u32);
-    GUI::run(settings);
 }
