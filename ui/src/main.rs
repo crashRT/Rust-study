@@ -1,6 +1,6 @@
 use iced::{
     button, executor, Align, Application, Button, Clipboard, Column, Command, Element, Font,
-    HorizontalAlignment, Length, Row, Settings, Text,
+    HorizontalAlignment, Length, Row, Settings, Subscription, Text,
 };
 use iced_futures::{self, futures};
 use std::time::{Duration, Instant};
@@ -9,6 +9,11 @@ const FONT: Font = Font::External {
     name: "Ricty Diminished",
     bytes: include_bytes!("../rsc/RictyDiminished-Regular.ttf"),
 };
+
+const FPS: u64 = 30;
+const MILLISEC: u64 = 100;
+const MINUTE: u64 = 60;
+const HOUR: u64 = 60 * MINUTE;
 
 fn main() {
     let mut settings = Settings::default();
@@ -26,6 +31,7 @@ pub enum Message {
     Start,
     Stop,
     Reset,
+    Update,
 }
 
 pub struct Timer {
@@ -98,6 +104,7 @@ impl Application for GUI {
                 self.tick_state = TickState::Stopped;
             }
             Message::Reset => {}
+            Message::Update => todo!(),
         }
         Command::none()
     }
@@ -151,5 +158,10 @@ impl Application for GUI {
             .height(Length::Fill)
             .align_items(Align::Center)
             .into()
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        let timer = Timer::new(Duration::from_millis(MILLISEC / FPS));
+        iced::Subscription::from_recipe(timer).map(|_| Message::Update)
     }
 }
