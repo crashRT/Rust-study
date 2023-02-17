@@ -126,13 +126,13 @@ impl Application for GUI {
     fn view(&mut self) -> Element<Self::Message> {
         // prepare duration text
         let seconds = self.total_duration.as_secs();
-        let duration_text = format!{
+        let duration_text = format! {
             "{:0>2}:{:0>2}:{:0>2}.{:0>2}",
             seconds / HOUR,
             (seconds % HOUR) / MINUTE,
             seconds % MINUTE,
             self.total_duration.subsec_millis() / 10,
-        }
+        };
 
         // prepare start/stop text
         let start_stop_text = match self.tick_state {
@@ -151,7 +151,7 @@ impl Application for GUI {
         };
 
         // init widgets
-        let tick_text = Text::new("00:00:00.00").font(FONT).size(60);
+        let tick_text = Text::new(duration_text).font(FONT).size(60);
         let start_stop_button = Button::new(&mut self.start_stop_button_state, start_stop_text)
             .min_width(80)
             .on_press(start_stop_message);
