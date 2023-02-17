@@ -21,7 +21,9 @@ fn main() {
     GUI::run(settings);
 }
 struct GUI {
+    last_update: Instant,
     tick_state: TickState,
+    total_duration: Duration,
     start_stop_button_state: button::State,
     reset_button_state: button::State,
 }
@@ -79,6 +81,8 @@ impl Application for GUI {
     fn new(_flags: ()) -> (GUI, Command<Self::Message>) {
         (
             GUI {
+                last_update: Instant::now(),
+                total_duration: Duration::default(),
                 tick_state: TickState::Stopped,
                 start_stop_button_state: button::State::new(),
                 reset_button_state: button::State::new(),
@@ -103,15 +107,32 @@ impl Application for GUI {
             Message::Stop => {
                 self.tick_state = TickState::Stopped;
             }
-            Message::Reset => {}
-            Message::Update => todo!(),
+            Message::Reset => {
+                self.last_update = Instant::now();
+                self.total_duration = Duration::default();
+            }
+            Message::Update => match self.tick_state {
+                TickState::Ticking => {
+                    let now_update = Instant::now();
+                    self.total_duration += now_update - self.last_update;
+                    self.last_update = now_update;
+                }
+                _ => {}
+            },
         }
         Command::none()
     }
 
     fn view(&mut self) -> Element<Self::Message> {
         // prepare duration text
-        let duration_text = "00:00:00.00";
+        let seconds = self.total_duration.as_secs();
+        let duration_text = format!{
+            "{:0>2}:{:0>2}:{:0>2}.{:0>2}",
+            seconds / HOUR,
+            (seconds % HOUR) / MINUTE,
+            seconds % MINUTE,
+            self.total_duration.subsec_millis() / 10,
+        }
 
         // prepare start/stop text
         let start_stop_text = match self.tick_state {
